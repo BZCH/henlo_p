@@ -1,0 +1,35 @@
+import discord
+import requests
+import asyncio
+
+TOKEN = "ВАШ_ТОКЕН_БОТА"  # Вставьте токен бота из Discord Developer Portal
+CONTRACT = "0xb2F776e9c1C926C4b2e54182Fac058dA9Af0B6A5"
+DEX_API = f"https://api.dexscreener.com/latest/dex/pairs/berachain/{CONTRACT}"
+
+intents = discord.Intents.default()
+client = discord.Client(intents=intents)
+
+async def update_nickname():
+    await client.wait_until_ready()
+    
+    while not client.is_closed():
+        try:
+            response = requests.get(DEX_API).json()
+            price = response["pairs"][0]["priceUsd"]  # Получаем цену в USD
+            
+            guild = discord.utils.get(client.guilds)  # Получаем сервер (где бот)
+            if guild:
+                await guild.me.edit(nick=f"$HENLO ${price}")  # Обновляем ник бота
+
+            print(f"Обновлен ник: $HENLO ${price}")
+        except Exception as e:
+            print(f"Ошибка: {e}")
+
+        await asyncio.sleep(60)  # Обновление каждую минуту
+
+@client.event
+async def on_ready():
+    print(f"Bot {client.user} started!")
+    client.loop.create_task(update_nickname())
+
+client.run(TOKEN)
